@@ -1,4 +1,3 @@
-
 export interface HistoricalEvent {
   year: string;
   description: string;

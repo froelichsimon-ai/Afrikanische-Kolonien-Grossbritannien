@@ -1,12 +1,34 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { ColonyData, QuizQuestion } from "../types";
 import { COLONIAL_NAME_MAPPING, BRITISH_COLONIES_MODERN_NAMES } from "../constants";
 
 const getAiClient = () => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    throw new Error("API Key not found. Please set the API_KEY environment variable.");
+  // robust key retrieval for different build environments
+  let apiKey = "";
+  
+  try {
+    // 1. Try standard process.env (AI Studio / Node / Webpack with define)
+    if (typeof process !== 'undefined' && process.env?.API_KEY) {
+      apiKey = process.env.API_KEY;
+    } 
+    // 2. Try Create React App prefix
+    else if (typeof process !== 'undefined' && process.env?.REACT_APP_API_KEY) {
+      apiKey = process.env.REACT_APP_API_KEY;
+    }
+    // 3. Try Vite import.meta (if available in environment)
+    else if (import.meta && (import.meta as any).env?.VITE_API_KEY) {
+      apiKey = (import.meta as any).env.VITE_API_KEY;
+    }
+  } catch (e) {
+    console.warn("Environment variable access failed", e);
   }
+
+  if (!apiKey) {
+    console.error("CRITICAL: API Key is missing. Please set API_KEY, REACT_APP_API_KEY, or VITE_API_KEY in your environment variables.");
+    throw new Error("API Key not found. Please configure your hosting settings.");
+  }
+
   return new GoogleGenAI({ apiKey: apiKey });
 };
 
